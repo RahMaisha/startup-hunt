@@ -1,0 +1,14 @@
+# Render Blueprint: free web service, deploys from GitHub on every push.
+# Render asks you for APP_PASSWORD when you create the Blueprint (it is never stored in this repo).
+services:
+  - type: web
+    name: startup-hunt
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python server.py --no-browser
+    healthCheckPath: /healthz
+    autoDeploy: true
+    envVars:
+      - key: APP_PASSWORD
+        sync: false

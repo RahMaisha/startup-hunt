@@ -1,18 +1,43 @@
-# startup-hunt-webscrapper
+# Startup Hunt
 
 Finds **recently funded startups** and the **remote-friendly jobs** they are hiring for, filtered by
 funding round, years of experience and skills. Every job returned is remote-friendly (hybrid / on-site
 roles are always dropped).
 
-## Web UI (front screen)
+## Run it on your computer (2 minutes)
+
+You need [Python 3.10+](https://www.python.org/downloads/) (on Windows, tick "Add Python to PATH" when installing).
 
 ```bash
+git clone https://github.com/RahMaisha/startup-hunt.git
+cd startup-hunt
 pip install -r requirements.txt
-python server.py            # opens http://127.0.0.1:8765
+python server.py
 ```
 
-Pick filters, press **Find startups** (takes 1-3 min, live data), browse companies, expand for jobs,
-search the results, download a CSV. The server only listens on localhost.
+Your browser opens http://127.0.0.1:8765. Pick filters, press **Find startups** (1-3 min, live data),
+expand companies to see jobs, search the results, download a CSV. Locally there is no password and the
+server is only reachable from your own computer.
+
+No git? On the GitHub page use **Code -> Download ZIP**, unzip it, and run the last two commands inside the folder.
+
+## Host it for free (Render)
+
+Gives you a link like `https://startup-hunt.onrender.com` that friends can open, protected by a password.
+
+1. Sign up at [render.com](https://render.com) with your GitHub account.
+2. **New -> Blueprint**, pick this repository. Render reads `render.yaml`.
+3. When asked for `APP_PASSWORD`, choose a password and share it with your friends.
+4. **Apply**. After the build, open the URL Render shows; the browser asks for the password
+   (any username works).
+
+Every push to `main` redeploys automatically. On the free plan the app **sleeps after ~15 minutes
+without visits**, so the first visit after a break takes about a minute to wake up; data scraped and the
+cache don't survive restarts (each run fetches fresh data anyway). The server refuses to start publicly
+without `APP_PASSWORD`, so strangers can't use your link to trigger scrapes.
+
+Other hosts work the same way: set `PORT` (most platforms do it for you), `APP_PASSWORD`, and
+`ALLOWED_HOSTS=your-app.example.com`, then run `python server.py --no-browser`.
 
 ## Command line
 

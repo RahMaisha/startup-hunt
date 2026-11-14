@@ -165,6 +165,28 @@ class ServerHardening(unittest.TestCase):
         self.assertEqual(status, 400)
         self.assertIn("min_amount", json.loads(body)["error"])
 
+    def test_password_mode(self):
+        import base64
+        orig_pw, orig_hosts = server.APP_PASSWORD, set(server.ALLOWED_HOSTS)
+        server.APP_PASSWORD = "s3cret"
+        server.ALLOWED_HOSTS.add("startup-hunt.onrender.com")
+        try:
+            def auth(pw):
+                return "Basic " + base64.b64encode(f"me:{pw}".encode()).decode()
+            self.assertEqual(self.req("GET", "/healthz", host="startup-hunt.onrender.com")[0], 200)  # no auth
+            status, _, h = self.req("GET", "/", host="startup-hunt.onrender.com")
+            self.assertEqual(status, 401)
+            self.assertIn("Basic", h["WWW-Authenticate"])
+            c = http.client.HTTPConnection("127.0.0.1", self.port, timeout=10)
+            for pw, want in (("wrong", 401), ("s3cret", 200)):
+                c.request("GET", "/api/meta", headers={"Host": "startup-hunt.onrender.com", "Authorization": auth(pw)})
+                r = c.getresponse(); r.read()
+                self.assertEqual(r.status, want, pw)
+            self.assertEqual(self.req("POST", "/api/run", b"{}", host="startup-hunt.onrender.com")[0], 401)
+        finally:
+            server.APP_PASSWORD = orig_pw
+            server.ALLOWED_HOSTS.clear(); server.ALLOWED_HOSTS.update(orig_hosts)
+
     def test_old_runs_pruned(self):
         server.JOBS.clear()
         for i in range(server.KEEP_RUNS + 3):
