@@ -1,0 +1,421 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Startup Hunt</title>
+<script>/* apply saved theme before first paint (no flash) */
+try{ const t=JSON.parse(localStorage.getItem("sh_theme")||'"auto"'); if(t==="light"||t==="dark") document.documentElement.setAttribute("data-theme",t); }catch(e){}
+</script>
+<style>
+  :root{
+    --bg:#f6f7f9; --card:#fff; --ink:#111827; --muted:#6b7280; --line:#e5e7eb;
+    --accent:#4f46e5; --accent-ink:#fff; --soft:#eef2ff; --ok:#059669; --okbg:#ecfdf5; --warn:#b45309; --warnbg:#fffbeb;
+  }
+  :root{color-scheme:light}
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      color-scheme:dark;
+      --bg:#0f1115; --card:#181b22; --ink:#e5e7eb; --muted:#9ca3af; --line:#2a2f3a;
+      --accent:#818cf8; --accent-ink:#0f1115; --soft:#232650; --ok:#34d399; --okbg:#0f2a22; --warn:#fbbf24; --warnbg:#2b2411;}
+  }
+  :root[data-theme="dark"]{
+    color-scheme:dark;
+    --bg:#0f1115; --card:#181b22; --ink:#e5e7eb; --muted:#9ca3af; --line:#2a2f3a;
+    --accent:#818cf8; --accent-ink:#0f1115; --soft:#232650; --ok:#34d399; --okbg:#0f2a22; --warn:#fbbf24; --warnbg:#2b2411;}
+  .theme{margin-left:auto;display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden;background:var(--card)}
+  .theme button{border:0;background:transparent;color:var(--muted);padding:6px 12px;font-size:13px}
+  .theme button[aria-pressed=true]{background:var(--accent);color:var(--accent-ink);font-weight:700}
+  .theme button:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+  .htop{display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+  header{padding:28px 16px 8px;max-width:1100px;margin:0 auto}
+  h1{margin:0;font-size:26px;letter-spacing:-.02em}
+  header p{margin:4px 0 0;color:var(--muted)}
+  main{max-width:1100px;margin:0 auto;padding:16px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:16px}
+  .card h2{margin:0 0 12px;font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px}
+  label.f{display:block;font-size:13px;font-weight:600}
+  label.f small{display:block;font-weight:400;color:var(--muted);margin-top:2px}
+  input[type=text],input[type=number]{width:100%;margin-top:6px;padding:9px 11px;border:1px solid var(--line);border-radius:9px;background:var(--bg);color:var(--ink);font:inherit}
+  input:focus{outline:2px solid var(--accent);outline-offset:0}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+  .chip{position:relative}
+  .chip input{position:absolute;opacity:0;inset:0;cursor:pointer}
+  .chip span{display:inline-block;padding:6px 13px;border:1px solid var(--line);border-radius:999px;background:var(--bg);font-size:13px;cursor:pointer;user-select:none}
+  .chip input:checked + span{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+  .chip input:focus-visible + span{outline:2px solid var(--accent);outline-offset:2px}
+  .lock{display:inline-flex;gap:6px;align-items:center;background:var(--okbg);color:var(--ok);padding:6px 12px;border-radius:999px;font-size:13px;font-weight:600}
+  .row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+  .checks label{display:flex;gap:8px;align-items:center;font-size:14px;margin:6px 0}
+  button{font:inherit;cursor:pointer}
+  .primary{background:var(--accent);color:var(--accent-ink);border:0;padding:12px 26px;border-radius:10px;font-weight:700;font-size:15px}
+  .primary:disabled{opacity:.55;cursor:wait}
+  .ghost{background:transparent;border:1px solid var(--line);color:var(--ink);padding:8px 14px;border-radius:9px}
+  details summary{cursor:pointer;color:var(--muted);font-size:13px;font-weight:600}
+  #log{background:#0b0d12;color:#a7f3d0;font:12px/1.5 ui-monospace,Consolas,monospace;padding:12px;border-radius:10px;max-height:190px;overflow:auto;white-space:pre-wrap;display:none}
+  .stats{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+  .stat{background:var(--soft);border-radius:12px;padding:10px 16px}
+  .stat b{display:block;font-size:22px;letter-spacing:-.02em}
+  .stat span{font-size:12px;color:var(--muted)}
+  .co{border:1px solid var(--line);border-radius:12px;margin-bottom:10px;overflow:hidden;background:var(--card)}
+  .co>summary{list-style:none;display:flex;gap:12px;align-items:center;padding:13px 16px;cursor:pointer;flex-wrap:wrap}
+  .co>summary::-webkit-details-marker{display:none}
+  .co .name{font-weight:700;font-size:16px}
+  .tag{font-size:12px;padding:2px 9px;border-radius:999px;background:var(--soft)}
+  .money{font-weight:700;color:var(--ok)}
+  .muted{color:var(--muted);font-size:13px}
+  .grow{flex:1}
+  .jobs{border-top:1px solid var(--line);overflow-x:auto}
+  table{border-collapse:collapse;width:100%;font-size:13.5px}
+  th,td{text-align:left;padding:9px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{font-size:12px;color:var(--muted);font-weight:600;white-space:nowrap}
+  tr:last-child td{border-bottom:0}
+  a{color:var(--accent)}
+  .badge{display:inline-block;font-size:11px;padding:1px 8px;border-radius:999px;margin-right:4px}
+  .b-relo{background:var(--warnbg);color:var(--warn)}
+  .sk{display:inline-block;font-size:11px;padding:1px 7px;border-radius:6px;background:var(--bg);border:1px solid var(--line);margin:1px 3px 1px 0}
+  .empty{text-align:center;color:var(--muted);padding:30px}
+  .tog{display:flex;align-items:center;gap:8px;background:none;border:0;padding:2px 4px;margin:-2px -4px;color:inherit;border-radius:8px}
+  .tog:hover{background:var(--soft)}
+  .tog:focus-visible{outline:2px solid var(--accent)}
+  .tog .arr{display:inline-block;width:16px;color:var(--muted);transition:transform .15s}
+  .tog[aria-expanded=false] .arr{transform:rotate(-90deg)}
+  [hidden]{display:none !important}
+  .grp{margin:10px 0 4px;display:flex;gap:10px;align-items:center;font-size:13px;font-weight:700}
+  .grp a{font-weight:400;font-size:12px;cursor:pointer}
+  .src{display:flex;gap:10px;align-items:flex-start;padding:7px 4px;border-bottom:1px solid var(--line)}
+  .src:last-child{border-bottom:0}
+  .src input{margin-top:4px}
+  .src .nm{font-weight:600;font-size:14px}
+  .src .ds{color:var(--muted);font-size:12.5px}
+  .st{margin-left:auto;font-size:12px;padding:2px 9px;border-radius:999px;background:var(--soft);white-space:nowrap}
+  .st.bad{background:var(--warnbg);color:var(--warn)}
+  .funnel{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:12px;font-size:12.5px}
+  .funnel .fs{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:3px 9px}
+  .funnel .fs b{font-size:13px}
+  .funnel .zero{border-color:var(--warn);color:var(--warn)}
+  .links{padding:11px 16px;border-top:1px solid var(--line);font-size:13px;display:flex;gap:14px;flex-wrap:wrap;align-items:center}
+  .x{cursor:pointer;color:var(--muted);margin-left:auto;background:none;border:0;font-size:16px}
+  .err{color:#dc2626;font-weight:600}
+  @media (max-width:560px){ main{padding:12px} .card{padding:14px} }
+</style>
+</head>
+<body>
+<header>
+  <div class="htop">
+    <div>
+      <h1>Startup Hunt</h1>
+      <p>Recently funded startups that are hiring remote-friendly roles. Filter by round, experience and skills.</p>
+    </div>
+    <div class="theme" role="group" aria-label="Theme">
+      <button type="button" data-theme="light" aria-pressed="false">☀ Light</button>
+      <button type="button" data-theme="auto" aria-pressed="false">Auto</button>
+      <button type="button" data-theme="dark" aria-pressed="false">☾ Dark</button>
+    </div>
+  </div>
+</header>
+
+<main>
+<section id="srcCard" class="card">
+  <div class="row hd" style="justify-content:space-between;margin-bottom:6px">
+    <button type="button" class="tog" data-tog="srcBody" aria-expanded="true" aria-controls="srcBody"><span class="arr">▾</span><h2 style="margin:0">Sources</h2></button>
+    <span class="muted" id="srcCount"></span>
+  </div>
+  <div id="srcBody">
+  <p class="muted" style="margin:0 0 10px">Tick the sources to use. After a run, each shows how many rows it returned. Your choices are remembered.</p>
+  <div id="srcGroups"></div>
+  <h2 style="margin-top:18px">Add your own</h2>
+  <div class="grid">
+    <div>
+      <label class="f">Job feed URL<small>any public RSS / Atom feed of jobs</small>
+        <div class="row" style="flex-wrap:nowrap;gap:8px"><input type="text" id="feedUrl" placeholder="https://example.com/jobs.rss" style="margin-top:6px"><button class="ghost" type="button" id="addFeed" style="margin-top:6px;white-space:nowrap">Add</button></div></label>
+      <div id="feeds" class="checks"></div>
+    </div>
+    <label class="f">Also check these companies<small>comma separated · looked up on all selected career boards, funded or not</small>
+      <input type="text" id="track" placeholder="Anthropic, Ramp, Linear"></label>
+  </div>
+  </div>
+</section>
+
+<form id="form" class="card" autocomplete="off">
+  <div class="row" style="justify-content:space-between;margin-bottom:6px">
+    <button type="button" class="tog" data-tog="filtBody" aria-expanded="true" aria-controls="filtBody"><span class="arr">▾</span><h2 style="margin:0">Filters</h2></button>
+    <span class="lock" title="Jobs that are not remote-friendly are always excluded">✓ Remote-friendly only</span>
+  </div>
+  <div id="filtBody">
+
+  <h2 style="margin-top:14px">Funding</h2>
+  <div class="grid">
+    <label class="f">Min round (USD M)<input type="number" id="min_amount" value="20" min="0" step="1"></label>
+    <label class="f">Max round (USD M)<input type="number" id="max_amount" placeholder="no limit" min="0" step="1"></label>
+    <label class="f">Funded in last (days)<input type="number" id="days" value="90" min="1"></label>
+    <label class="f">Lead investor<small>comma separated</small><input type="text" id="investors" placeholder="sequoia, a16z"></label>
+    <label class="f">Company name<small>comma separated</small><input type="text" id="companies" placeholder="optional"></label>
+  </div>
+  <div style="margin-top:14px">
+    <div class="muted" style="font-weight:600">Round</div>
+    <div class="chips" id="rounds"></div>
+  </div>
+
+  <h2 style="margin-top:22px">Jobs</h2>
+  <div>
+    <div class="muted" style="font-weight:600">Years of experience <span style="font-weight:400">(none selected = any)</span></div>
+    <div class="chips" id="experience"></div>
+  </div>
+  <div class="grid" style="margin-top:14px">
+    <label class="f">Skills<small>comma separated · job mentions any</small><input type="text" id="skills" placeholder="python, react, sql"></label>
+    <label class="f">Role keywords<small>title contains any</small><input type="text" id="roles" placeholder="engineer, designer"></label>
+    <label class="f">Exclude in title<small>comma separated</small><input type="text" id="exclude_roles" placeholder="manager, director"></label>
+    <label class="f">Job location<small>contains any</small><input type="text" id="locations" placeholder="united states, europe"></label>
+    <label class="f">Posted in last (days)<input type="number" id="job_days" placeholder="any" min="1"></label>
+  </div>
+  <div class="chips" id="skillchips" style="margin-top:10px"></div>
+  <div class="checks" style="margin-top:10px">
+    <label><input type="checkbox" id="all_skills"> Require <b>all</b> listed skills</label>
+    <label><input type="checkbox" id="relocation_only"> Must also mention relocation / visa sponsorship</label>
+    <label><input type="checkbox" id="keep_unknown_exp"> Keep jobs where experience isn't stated (only matters if experience is selected)</label>
+  </div>
+
+  <details style="margin-top:12px">
+    <summary>Advanced</summary>
+    <div class="grid" style="margin-top:12px">
+      <label class="f">Pages per source<small>Himalayas scans 8× this many pages</small><input type="number" id="pages" value="3" min="1" max="30"></label>
+    </div>
+    <div class="checks" style="margin-top:8px">
+      <label><input type="checkbox" id="fresh"> Fresh data: ignore the 6-hour cache of company career boards (slower)</label>
+      <label><input type="checkbox" id="only_matches"> Hide companies with no matching job (otherwise they show with "look manually" links)</label>
+    </div>
+  </details>
+
+  </div>
+
+  <div class="row" style="margin-top:18px">
+    <button class="primary" id="go" type="submit">Find startups</button>
+    <button class="ghost" id="reset" type="button">Reset</button>
+    <span class="muted" id="hint">Takes 1–3 minutes: it fetches live data politely, one request at a time.</span>
+  </div>
+  <pre id="log" style="margin-top:14px"></pre>
+</form>
+
+<section id="results" hidden>
+  <div class="card">
+    <div class="stats" id="stats"></div>
+    <div class="row">
+      <input type="text" id="search" placeholder="Search results (company, job title, skill)…" style="flex:1;min-width:220px;margin:0">
+      <button class="ghost" id="expand" type="button">Expand all</button>
+      <a class="ghost" id="csv" style="text-decoration:none" href="#">Download CSV</a>
+    </div>
+  </div>
+  <div id="list"></div>
+</section>
+</main>
+
+<script>
+const $ = s => document.querySelector(s);
+const ROUNDS = ["Pre-Seed","Seed","Series A","Series B","Series C","Series D","Series E"];
+const EXP = [["0","0 yrs / new grad"],["1-2","1–2 yrs"],["2-3","2–3 yrs"],["4+","4+ yrs"]];
+const SKILLS = ["python","javascript","typescript","react","node.js","java","go","rust","sql","aws","docker","kubernetes","machine learning","llm"];
+let jobId = null, lastResult = null;
+
+function chips(el, items, name, checked=()=>false){
+  $(el).innerHTML = items.map(it=>{
+    const [v,l] = Array.isArray(it)?it:[it,it];
+    return `<label class="chip"><input type="checkbox" name="${name}" value="${v}" ${checked(v)?"checked":""}><span>${l}</span></label>`;
+  }).join("");
+}
+const picked = name => [...document.querySelectorAll(`input[name=${name}]:checked`)].map(i=>i.value);
+const csv = id => $(id).value.split(",").map(s=>s.trim()).filter(Boolean);
+const esc = s => String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+// links come from scraped sites: only ever render http(s) URLs (never javascript:/data:)
+const safeHref = u => /^https?:\/\/\S+$/i.test(String(u??"")) ? esc(u) : "#";
+const money = n => n>=1e9 ? "$"+(n/1e9).toFixed(1)+"B" : n>=1e6 ? "$"+(n/1e6).toFixed(n%1e6?1:0)+"M" : n? "$"+n.toLocaleString() : "—";
+
+function buildStatic(meta){
+  chips("#rounds", ROUNDS, "rounds");
+  chips("#experience", EXP, "experience");
+  buildSources(meta.sources);
+  $("#skillchips").innerHTML = SKILLS.map(s=>`<button type="button" class="ghost" data-s="${s}" style="padding:3px 10px;font-size:12px">+ ${s}</button>`).join("");
+  $("#skillchips").onclick = e=>{
+    const s=e.target.dataset.s; if(!s) return;
+    const cur=csv("#skills"); if(!cur.includes(s)) cur.push(s);
+    $("#skills").value = cur.join(", ");
+  };
+}
+
+/* ---------- sources panel ---------- */
+const GROUPS = [["funding","fsrc","Funding sources"],["jobs","jsrc","Job boards"],["ats","ats","Company career boards (looked up per company)"]];
+const store = {
+  get(k,d){ try{ const v=localStorage.getItem("sh_"+k); return v===null?d:JSON.parse(v); }catch(e){ return d; } },
+  set(k,v){ try{ localStorage.setItem("sh_"+k, JSON.stringify(v)); }catch(e){} }
+};
+let feeds = store.get("feeds", []);   // [{url, on}]
+
+function buildSources(info){
+  const saved = store.get("sel", null);
+  $("#srcGroups").innerHTML = GROUPS.map(([g,name,title])=>`
+    <div class="grp">${title}<a data-all="${name}">all</a><a data-none="${name}">none</a></div>
+    ${Object.entries(info[g]).map(([key,[label,desc]])=>`
+      <label class="src"><input type="checkbox" name="${name}" value="${key}" ${(!saved||saved[name]?.includes(key))?"checked":""}>
+        <span><span class="nm">${esc(label)}</span><br><span class="ds">${esc(desc)}</span></span>
+        <span class="st" id="st-${key}" hidden></span></label>`).join("")}`).join("");
+  $("#srcGroups").addEventListener("change", saveSel);
+  $("#srcGroups").addEventListener("click", e=>{
+    const n=e.target.dataset.all||e.target.dataset.none; if(!n) return;
+    document.querySelectorAll(`input[name=${n}]`).forEach(i=>i.checked=!!e.target.dataset.all); saveSel();
+  });
+  $("#track").value = store.get("track","");
+  $("#track").addEventListener("input", ()=>store.set("track",$("#track").value));
+  renderFeeds(); countSel();
+}
+function saveSel(){ store.set("sel",{fsrc:picked("fsrc"),jsrc:picked("jsrc"),ats:picked("ats")}); countSel(); }
+function countSel(){
+  const n=picked("fsrc").length+picked("jsrc").length+picked("ats").length+feeds.filter(f=>f.on).length;
+  $("#srcCount").textContent = n+" selected";
+}
+function renderFeeds(){
+  $("#feeds").innerHTML = feeds.map((f,i)=>`<label class="src"><input type="checkbox" data-feed="${i}" ${f.on?"checked":""}>
+    <span><span class="nm">Custom feed</span><br><span class="ds">${esc(f.url)}</span></span>
+    <span class="st" id="st-feed:${esc(f.url)}" hidden></span>
+    <button type="button" class="x" data-del="${i}" title="Remove">×</button></label>`).join("");
+  countSel();
+}
+$("#feeds").addEventListener("change", e=>{ const i=e.target.dataset.feed; if(i===undefined) return; feeds[i].on=e.target.checked; store.set("feeds",feeds); countSel(); });
+$("#feeds").addEventListener("click", e=>{ const i=e.target.dataset.del; if(i===undefined) return; e.preventDefault(); feeds.splice(i,1); store.set("feeds",feeds); renderFeeds(); });
+$("#addFeed").addEventListener("click", ()=>{
+  const u=$("#feedUrl").value.trim();
+  if(!/^https?:\/\/.+/i.test(u)){ $("#feedUrl").focus(); return; }
+  if(!feeds.some(f=>f.url===u)) feeds.push({url:u,on:true});
+  store.set("feeds",feeds); $("#feedUrl").value=""; renderFeeds();
+});
+function showStatus(stats){
+  document.querySelectorAll(".st").forEach(s=>s.hidden=true);
+  Object.entries(stats||{}).forEach(([k,v])=>{
+    const el=document.getElementById("st-"+k); if(!el) return;
+    el.hidden=false; el.className="st"+(v.error?" bad":"");
+    el.textContent = v.error ? "failed" : v.rows+" rows"; el.title = v.error||"";
+  });
+}
+
+function params(){
+  const num = id => $(id).value==="" ? null : Number($(id).value);
+  return {
+    min_amount:num("#min_amount")??0, max_amount:num("#max_amount"), days:num("#days")??90,
+    investors:csv("#investors"), companies:csv("#companies"), rounds:picked("rounds"),
+    experience:picked("experience"), skills:csv("#skills"), roles:csv("#roles"),
+    exclude_roles:csv("#exclude_roles"), locations:csv("#locations"), job_days:num("#job_days"),
+    all_skills:$("#all_skills").checked, relocation_only:$("#relocation_only").checked,
+    keep_unknown_exp:$("#keep_unknown_exp").checked,
+    funding:picked("fsrc"), jobs:picked("jsrc"), ats:picked("ats"), pages:num("#pages")??3,
+    custom_feeds:feeds.filter(f=>f.on).map(f=>f.url), track:csv("#track"),
+    only_matches:$("#only_matches").checked,
+    use_cache:!$("#fresh").checked,
+  };
+}
+
+$("#form").addEventListener("submit", async e=>{
+  e.preventDefault();
+  const log=$("#log"); log.style.display="block"; log.textContent="Starting…";
+  $("#go").disabled=true; $("#go").textContent="Running…"; $("#results").hidden=true;
+  try{
+    const r = await fetch("/api/run",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(params())});
+    const j = await r.json();
+    if(!r.ok) throw new Error(j.error||r.status);
+    jobId=j.id; poll();
+  }catch(err){ log.innerHTML=`<span class="err">${esc(err.message)}</span>`; done(); }
+});
+
+function done(){ $("#go").disabled=false; $("#go").textContent="Find startups"; }
+
+async function poll(){
+  let j;
+  try{
+    const r = await fetch("/api/status/"+jobId); j = await r.json();
+    if(!r.ok) throw new Error(j.error||("HTTP "+r.status));
+  }catch(err){  // server stopped/restarted mid-run: don't leave the button stuck on "Running…"
+    $("#log").insertAdjacentHTML("beforeend", `\n<span class="err">Lost contact with the server (${esc(err.message)}). Is python server.py still running?</span>`);
+    done(); return;
+  }
+  const log=$("#log"); log.textContent=j.log.join("\n"); log.scrollTop=log.scrollHeight;
+  if(j.state==="running"){ setTimeout(poll,1200); return; }
+  done();
+  if(j.state==="done"){ lastResult=j.result; showStatus(j.result.source_stats); render(); }
+}
+
+function jobRow(j){
+  return `<tr>
+    <td><a href="${safeHref(j.url)}" target="_blank" rel="noopener noreferrer">${esc(j.title)}</a>
+        ${j.relocation?'<span class="badge b-relo">relocation</span>':""}</td>
+    <td>${esc(j.location)||"—"}</td>
+    <td>${esc(j.experience_years)||'<span class="muted">?</span>'}</td>
+    <td>${(j.skills||"").split(", ").filter(Boolean).map(s=>`<span class="sk">${esc(s)}</span>`).join("")}</td>
+    <td>${esc(j.salary)||"—"}</td>
+    <td class="muted">${esc(j.date)||"—"}</td></tr>`;
+}
+
+function render(){
+  const R=lastResult, q=$("#search").value.toLowerCase().trim();
+  $("#results").hidden=false;
+  $("#csv").href="/api/csv/"+jobId;
+  const cos = R.companies.filter(c=>!q || JSON.stringify(c).toLowerCase().includes(q));
+  $("#stats").innerHTML = [
+    [R.funding_rounds,"funding rounds"],[R.companies_with_jobs,"companies hiring remote"],
+    [R.matched_jobs,"matching jobs"],[R.total_jobs_scraped,"jobs scanned"]
+  ].map(([n,l])=>`<div class="stat"><b>${n}</b><span>${l}</span></div>`).join("")
+    + `<div class="funnel" style="flex-basis:100%"><span class="muted">Where jobs were filtered out:</span>`
+    + (R.funnel||[]).map((s,i)=>`${i?"→":""}<span class="fs ${s.count===0?"zero":""}">${esc(s.label)}: <b>${s.count}</b></span>`).join("")
+    + `</div>`;
+  $("#list").innerHTML = cos.length ? cos.map(c=>`
+    <details class="co"><summary>
+      <span class="name">${esc(c.company)}</span>
+      <span class="money">${money(c.amount_usd)}</span>
+      ${c.round?`<span class="tag">${esc(c.round)}</span>`:""}
+      <span class="muted">${esc(c.date)}${c.lead_investor?" · led by "+esc(c.lead_investor):""}</span>
+      <span class="grow"></span>
+      <span class="tag" style="background:var(--okbg);color:var(--ok)">${c.matching_jobs} remote job${c.matching_jobs==1?"":"s"}</span>
+      ${c.url?`<a href="${safeHref(c.url)}" target="_blank" rel="noopener noreferrer" class="muted" onclick="event.stopPropagation()">source ↗</a>`:""}
+    </summary>
+    ${c.jobs.length?`<div class="jobs"><table><thead><tr><th>Role</th><th>Location</th><th>Exp.</th><th>Skills</th><th>Salary</th><th>Posted</th></tr></thead>
+    <tbody>${c.jobs.map(jobRow).join("")}</tbody></table></div>`:`<div class="jobs empty">No matching remote jobs found for this company.</div>`}
+    <div class="links"><span class="muted">Look manually:</span>${(c.links||[]).map(l=>`<a href="${safeHref(l.url)}" target="_blank" rel="noopener noreferrer">${esc(l.label)} ↗</a>`).join("")}</div>
+    </details>`).join("")
+    : `<div class="card empty">No results. Try widening the filters (lower the minimum round, add experience ranges, or remove skills).</div>`;
+}
+
+$("#search").addEventListener("input", ()=>lastResult&&render());
+$("#expand").addEventListener("click", ()=>{
+  const ds=[...document.querySelectorAll("details.co")]; const open=ds.some(d=>!d.open);
+  ds.forEach(d=>d.open=open); $("#expand").textContent=open?"Collapse all":"Expand all";
+});
+$("#reset").addEventListener("click", ()=>{ $("#form").reset(); });
+
+/* theme: light / auto (follow system) / dark, remembered */
+function applyTheme(t){
+  if(t==="light"||t==="dark") document.documentElement.setAttribute("data-theme", t);
+  else document.documentElement.removeAttribute("data-theme");
+  document.querySelectorAll(".theme button").forEach(b=>b.setAttribute("aria-pressed", b.dataset.theme===t));
+}
+applyTheme(store.get("theme","auto"));
+document.querySelector(".theme").addEventListener("click", e=>{
+  const t=e.target.dataset.theme; if(!t) return; store.set("theme",t); applyTheme(t);
+});
+
+/* collapsible sections (state remembered) */
+function setOpen(btn, open){
+  btn.setAttribute("aria-expanded", open);
+  document.getElementById(btn.dataset.tog).hidden = !open;
+}
+document.querySelectorAll(".tog").forEach(btn=>{
+  setOpen(btn, store.get("open_"+btn.dataset.tog, true));
+  btn.addEventListener("click", ()=>{
+    const open = btn.getAttribute("aria-expanded") !== "true";
+    setOpen(btn, open); store.set("open_"+btn.dataset.tog, open);
+  });
+});
+
+fetch("/api/meta").then(r=>r.json()).then(buildStatic);
+</script>
+</body>
+</html>

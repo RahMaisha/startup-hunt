@@ -1,0 +1,13 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Generated data (re-created by every run)
+output/
+.cache/
+
+# Logs / scratch
+*.log
+out.csv
