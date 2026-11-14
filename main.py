@@ -11,7 +11,7 @@ import argparse
 import sys
 
 from hunt.pipeline import DEFAULTS, run
-from hunt.sources import ATS_BOARDS, FUNDING_SOURCES, JOB_SOURCES
+from hunt.sources import ATS_BOARDS, FUNDING_SOURCES, JOB_SOURCES, SOURCE_INFO
 
 
 def build_params(a: argparse.Namespace) -> dict:
@@ -61,9 +61,15 @@ def main():
     a = ap.parse_args()
 
     if a.list_sources:
-        print("funding:", *FUNDING_SOURCES)
-        print("jobs:   ", *JOB_SOURCES)
-        print("boards: ", *ATS_BOARDS)
+        titles = {"funding": "Funding sources (--funding)", "jobs": "Job boards (--jobs)",
+                  "ats": "Company career boards (--ats)"}
+        for group, items in SOURCE_INFO.items():
+            print()
+            print(titles[group])
+            for key, (label, desc, site) in items.items():
+                print(f"  {key:<15} {label:<20} {site}")
+        print()
+        print("Also: each company's own website (to find its job board), plus any feed you add with --feed URL.")
         return
 
     try:

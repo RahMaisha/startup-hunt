@@ -91,6 +91,8 @@ try{ const t=JSON.parse(localStorage.getItem("sh_theme")||'"auto"'); if(t==="lig
   .src input{margin-top:4px}
   .src .nm{font-weight:600;font-size:14px}
   .src .ds{color:var(--muted);font-size:12.5px}
+  .src .site{font-size:12px;margin-left:6px;text-decoration:none}
+  .src .site:hover{text-decoration:underline}
   .st{margin-left:auto;font-size:12px;padding:2px 9px;border-radius:999px;background:var(--soft);white-space:nowrap}
   .st.bad{background:var(--warnbg);color:var(--warn)}
   .funnel{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:12px;font-size:12.5px}
@@ -257,9 +259,11 @@ function buildSources(info){
   const saved = store.get("sel", null);
   $("#srcGroups").innerHTML = GROUPS.map(([g,name,title])=>`
     <div class="grp">${title}<a data-all="${name}">all</a><a data-none="${name}">none</a></div>
-    ${Object.entries(info[g]).map(([key,[label,desc]])=>`
+    ${Object.entries(info[g]).map(([key,[label,desc,site]])=>`
       <label class="src"><input type="checkbox" name="${name}" value="${key}" ${(!saved||saved[name]?.includes(key))?"checked":""}>
-        <span><span class="nm">${esc(label)}</span><br><span class="ds">${esc(desc)}</span></span>
+        <span><span class="nm">${esc(label)}</span>
+          ${site?`<a class="site" href="${safeHref(site)}" target="_blank" rel="noopener noreferrer">${esc(site.replace(/^https?:\/\/(www\.)?/,"").replace(/\/$/,""))} ↗</a>`:""}
+          <br><span class="ds">${esc(desc)}</span></span>
         <span class="st" id="st-${key}" hidden></span></label>`).join("")}`).join("");
   $("#srcGroups").addEventListener("change", saveSel);
   $("#srcGroups").addEventListener("click", e=>{

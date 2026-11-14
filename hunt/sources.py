@@ -419,27 +419,28 @@ JOB_SOURCES = {"prepdb_jobs": prepdb_jobs, "remoteok": remoteok, "weworkremotely
                "jobicy": jobicy, "workingnomads": workingnomads}
 
 
-SOURCE_INFO = {
+SOURCE_INFO = {  # key: (label, description, website)
     "funding": {
-        "prepdb": ("prepdb.fyi", "Latest funding rounds table (amount, round, lead investor)"),
-        "techcrunch": ("TechCrunch Venture", "Funding news RSS; company/amount parsed from headlines (approximate)"),
+        "prepdb": ("prepdb.fyi", "Latest funding rounds table (amount, round, lead investor)", "https://prepdb.fyi"),
+        "techcrunch": ("TechCrunch", "Venture + startups news RSS; company/amount parsed from headlines (approximate)",
+                       "https://techcrunch.com/category/venture/"),
     },
     "jobs": {
-        "prepdb_jobs": ("prepdb.fyi jobs", "New-grad / early-career roles at funded startups (US/Canada)"),
-        "remoteok": ("RemoteOK", "Remote jobs, public API"),
-        "weworkremotely": ("We Work Remotely", "Remote jobs, RSS"),
-        "hn_hiring": ("HN: Who is hiring", "Last 3 monthly threads, official HN API"),
-        "arbeitnow": ("Arbeitnow", "Europe-heavy, many relocation / visa-sponsored roles"),
-        "himalayas": ("Himalayas", "Remote jobs, public API (scans many pages)"),
-        "jobicy": ("Jobicy", "Remote jobs, public API"),
-        "workingnomads": ("Working Nomads", "Remote jobs, public API"),
+        "prepdb_jobs": ("prepdb.fyi jobs", "New-grad / early-career roles at funded startups (US/Canada)", "https://prepdb.fyi/jobs"),
+        "remoteok": ("RemoteOK", "Remote jobs, public API", "https://remoteok.com"),
+        "weworkremotely": ("We Work Remotely", "Remote jobs, RSS", "https://weworkremotely.com"),
+        "hn_hiring": ("HN: Who is hiring", "Last 3 monthly threads, official HN API", "https://news.ycombinator.com/submitted?id=whoishiring"),
+        "arbeitnow": ("Arbeitnow", "Europe-heavy, many relocation / visa-sponsored roles", "https://www.arbeitnow.com"),
+        "himalayas": ("Himalayas", "Remote jobs, public API (scans many pages)", "https://himalayas.app/jobs"),
+        "jobicy": ("Jobicy", "Remote jobs, public API", "https://jobicy.com"),
+        "workingnomads": ("Working Nomads", "Remote jobs, public API", "https://www.workingnomads.com"),
     },
     "ats": {
-        "greenhouse": ("Greenhouse boards", "Each funded company's own Greenhouse job board"),
-        "lever": ("Lever boards", "Each funded company's own Lever job board"),
-        "ashby": ("Ashby boards", "Each funded company's own Ashby job board"),
-        "workable": ("Workable boards", "Each funded company's own Workable job board"),
-        "recruitee": ("Recruitee boards", "Each funded company's own Recruitee job board"),
-        "rippling": ("Rippling boards", "Each funded company's own Rippling job board"),
+        "greenhouse": ("Greenhouse boards", "Each funded company's own Greenhouse job board", "https://www.greenhouse.com"),
+        "lever": ("Lever boards", "Each funded company's own Lever job board", "https://www.lever.co"),
+        "ashby": ("Ashby boards", "Each funded company's own Ashby job board", "https://www.ashbyhq.com"),
+        "workable": ("Workable boards", "Each funded company's own Workable job board", "https://www.workable.com"),
+        "recruitee": ("Recruitee boards", "Each funded company's own Recruitee job board", "https://recruitee.com"),
+        "rippling": ("Rippling boards", "Each funded company's own Rippling job board", "https://www.rippling.com"),
     },
 }

@@ -2,11 +2,58 @@
 
 Finds **recently funded startups** and the **remote-friendly jobs** they are hiring for, filtered by
 funding round, years of experience and skills. Every job returned is remote-friendly (hybrid / on-site
-roles are always dropped).
+roles are always dropped). Runs on your own computer: a web page at http://127.0.0.1:8765, or the command line.
 
-## Run it on your computer (2 minutes)
+## Websites it scrapes
 
-You need [Python 3.10+](https://www.python.org/downloads/) (on Windows, tick "Add Python to PATH" when installing).
+You can switch each one on or off in the **Sources** panel on the page, or with `--funding`, `--jobs`
+and `--ats` on the command line. Print this list any time with `python main.py --list-sources`.
+
+### Funding (who just raised money)
+| Key | Website | What it gives | How |
+|---|---|---|---|
+| `prepdb` | [prepdb.fyi](https://prepdb.fyi) | Latest rounds: company, amount, round, date, lead investor, company website | HTML pages |
+| `techcrunch` | [TechCrunch](https://techcrunch.com/category/venture/) (venture + startups) | Funding news; company and amount read from headlines (approximate) | RSS |
+
+### Job boards (remote jobs from many companies)
+| Key | Website | What it gives | How |
+|---|---|---|---|
+| `prepdb_jobs` | [prepdb.fyi/jobs](https://prepdb.fyi/jobs) | New-grad / early-career roles at funded startups (US/Canada) | HTML pages |
+| `remoteok` | [RemoteOK](https://remoteok.com) | Remote jobs | public API |
+| `weworkremotely` | [We Work Remotely](https://weworkremotely.com) | Remote jobs | RSS |
+| `hn_hiring` | [Hacker News "Who is hiring"](https://news.ycombinator.com/submitted?id=whoishiring) | Last 3 monthly threads | official HN API |
+| `arbeitnow` | [Arbeitnow](https://www.arbeitnow.com) | Europe-heavy; many relocation / visa-sponsored roles | public API |
+| `himalayas` | [Himalayas](https://himalayas.app/jobs) | Remote jobs | public API |
+| `jobicy` | [Jobicy](https://jobicy.com) | Remote jobs | public API |
+| `workingnomads` | [Working Nomads](https://www.workingnomads.com) | Remote jobs | public API |
+
+### Company career boards (looked up for each funded company — most of the matches come from here)
+| Key | Platform | Example board |
+|---|---|---|
+| `greenhouse` | [Greenhouse](https://www.greenhouse.com) | `boards.greenhouse.io/<company>` |
+| `lever` | [Lever](https://www.lever.co) | `jobs.lever.co/<company>` |
+| `ashby` | [Ashby](https://www.ashbyhq.com) | `jobs.ashbyhq.com/<company>` |
+| `workable` | [Workable](https://www.workable.com) | `apply.workable.com/<company>` |
+| `recruitee` | [Recruitee](https://recruitee.com) | `<company>.recruitee.com` |
+| `rippling` | [Rippling](https://www.rippling.com) | `ats.rippling.com/<company>/jobs` |
+
+### Also read
+- **Each funded company's own website** (`/careers`, `/jobs`, home page) to find its exact job-board link.
+- **prepdb.fyi startup pages** to get each company's website.
+- **Any RSS / Atom job feed you add** (page: *Add your own*; CLI: `--feed URL`).
+
+### Links only (not scraped)
+Every company card has *Look manually* links to **LinkedIn** (remote jobs search), **Google** and **Indeed**.
+
+### Deliberately not used
+| Website | Why |
+|---|---|
+| Remotive | its robots.txt disallows its API |
+| Crunchbase, LinkedIn, Wellfound | need a login / their terms forbid scraping |
+
+## Quick start
+
+You need [Python 3.10+](https://www.python.org/downloads/). On Windows tick **"Add Python to PATH"** when installing.
 
 ```bash
 git clone https://github.com/RahMaisha/startup-hunt.git
@@ -16,106 +63,95 @@ python server.py
 ```
 
 Your browser opens http://127.0.0.1:8765. Pick filters, press **Find startups** (1-3 min, live data),
-expand companies to see jobs, search the results, download a CSV. Locally there is no password and the
-server is only reachable from your own computer.
+expand companies to see jobs, search the results, **Download CSV**. Stop it with **Ctrl+C** in the terminal.
 
-No git? On the GitHub page use **Code -> Download ZIP**, unzip it, and run the last two commands inside the folder.
+No git? On GitHub use **Code -> Download ZIP**, unzip, open a terminal in the folder, run the last two commands.
 
-## Host it for free (Render)
+## Commands
 
-Gives you a link like `https://startup-hunt.onrender.com` that friends can open, protected by a password.
+> On macOS / Linux use `python3` and `pip3` instead of `python` and `pip`.
 
-1. Sign up at [render.com](https://render.com) with your GitHub account.
-2. **New -> Blueprint**, pick this repository. Render reads `render.yaml`.
-3. When asked for `APP_PASSWORD`, choose a password and share it with your friends.
-4. **Apply**. After the build, open the URL Render shows; the browser asks for the password
-   (any username works).
+### Setup
+| Command | What it does |
+|---|---|
+| `git clone https://github.com/RahMaisha/startup-hunt.git` | download the project |
+| `cd startup-hunt` | go into the folder |
+| `python -m venv .venv` | *(optional)* create a private Python environment |
+| `.venv\Scripts\activate` (Windows) / `source .venv/bin/activate` (mac/Linux) | *(optional)* turn it on |
+| `pip install -r requirements.txt` | install the 3 libraries it needs |
+| `git pull` | update to the latest version later |
 
-Every push to `main` redeploys automatically. On the free plan the app **sleeps after ~15 minutes
-without visits**, so the first visit after a break takes about a minute to wake up; data scraped and the
-cache don't survive restarts (each run fetches fresh data anyway). The server refuses to start publicly
-without `APP_PASSWORD`, so strangers can't use your link to trigger scrapes.
+### Web page
+| Command | What it does |
+|---|---|
+| `python server.py` | start the page and open the browser |
+| `python server.py --no-browser` | start without opening a browser tab |
+| **Ctrl+C** | stop it |
 
-Other hosts work the same way: set `PORT` (most platforms do it for you), `APP_PASSWORD`, and
-`ALLOWED_HOSTS=your-app.example.com`, then run `python server.py --no-browser`.
+### Command line (results saved to `output/` as CSV + JSON)
+| Command | What it does |
+|---|---|
+| `python main.py --list-sources` | show every website it can scrape |
+| `python main.py` | defaults: rounds of $20M+ in the last 90 days, all sources |
+| `python main.py --min-amount 0 --days 30` | every round in the last 30 days, any size |
+| `python main.py --experience 0 1-2 --skills python react` | new-grad / junior jobs mentioning Python or React |
+| `python main.py --experience 4+ --all-skills --skills python aws` | 4+ years, must mention **both** skills |
+| `python main.py --rounds "series a" "series b" --investor sequoia a16z` | only those rounds / lead investors |
+| `python main.py --role engineer --exclude-role manager director` | title filters |
+| `python main.py --relocation-only --location europe --job-days 14` | relocation/visa roles in Europe, posted in 2 weeks |
+| `python main.py --funding prepdb --jobs remoteok himalayas --ats ashby greenhouse` | use only these sources |
+| `python main.py --track Anthropic Ramp` | also check these companies, funded or not |
+| `python main.py --feed https://example.com/jobs.rss` | add your own job feed |
+| `python main.py --only-matches` | list only companies with at least one matching job |
+| `python main.py --no-cache` | ignore the 6-hour cache, fetch everything fresh |
+| `python main.py --out results` | save files to `results/` instead of `output/` |
+| `python main.py --help` | every option |
 
-## Command line
+### Maintenance
+| Command | What it does |
+|---|---|
+| `python -m unittest discover -s tests -v` | run the tests (offline) |
+| delete the `.cache` folder | clear cached career-board lookups |
 
-```bash
-python main.py                                                   # >= $20M, last 90 days
-python main.py --experience 0 1-2 --skills python react          # new-grad / junior, Python or React
-python main.py --experience 4+ --all-skills --skills python aws  # 4+ yrs, needs BOTH skills
-python main.py --rounds "series a" "series b" --investor sequoia a16z --role engineer
-python main.py --relocation-only --location europe --job-days 14
-python main.py --list-sources
-```
-
-Results are also written to `./output/` (CSV + JSON).
-
-### Filters
+### All filters
 | Group | Option | Meaning |
 |---|---|---|
-| funding | `--min-amount / --max-amount` | round size, USD millions |
+| funding | `--min-amount / --max-amount` | round size, USD millions (`0` = include rounds with no listed amount) |
 | funding | `--days` | funded within N days |
 | funding | `--rounds`, `--investor`, `--company` | substring match, any-of |
-| jobs | `--experience 0 1-2 2-3 4+` | years of experience; ranges overlap-match (a "2+ yrs" job fits `1-2` and `4+`) |
-| jobs | `--skills`, `--all-skills` | job text/tags mention any (or all) of the skills |
+| jobs | `--experience 0 1-2 2-3 4+` | years of experience; ranges overlap (a "2+ yrs" job fits `1-2` and `4+`) |
+| jobs | `--keep-unknown-exp` | keep jobs that don't state experience (dropped by default when `--experience` is set) |
+| jobs | `--skills`, `--all-skills` | job mentions any (or all) of the skills |
 | jobs | `--role`, `--exclude-role`, `--location`, `--job-days` | title / location / recency |
 | jobs | `--relocation-only` | also mentions relocation or visa sponsorship |
-| jobs | `--keep-unknown-exp` | keep jobs whose experience can't be determined (dropped by default when `--experience` is set) |
 | jobs | `--allow-non-remote` | include non-remote jobs (off by default) |
-| jobs | `--no-ats` | skip per-company career-board lookups (faster, fewer matches) |
-| jobs | `--no-cache` | ignore the 6-hour career-board cache |
+| jobs | `--no-ats` | skip company career boards (faster, far fewer matches) |
 
-## Sources
-The **Sources** panel at the top of the web UI lists everything below with a checkbox each. Untick what you
-don't want; after a run each source shows its row count (or "failed"). Choices are remembered in the browser.
+## Sharing with friends
 
-| Type | Source | Method |
-|---|---|---|
-| funding | prepdb.fyi | HTML table, `/?page=N` |
-| funding | TechCrunch venture | RSS (headline parsing, approximate) |
-| jobs | prepdb.fyi/jobs | HTML cards |
-| jobs | RemoteOK, Himalayas, Jobicy, Working Nomads, Arbeitnow | public JSON APIs (Himalayas: 20 jobs/page, so it scans 8x `--pages`) |
-| jobs | We Work Remotely | RSS |
-| jobs | HN "Who is hiring" | official Algolia HN API, last 3 monthly threads |
-| jobs | **Greenhouse / Lever / Ashby / Workable / Recruitee / Rippling** | public career-board APIs, queried per company (biggest source of matches). The company's own site is read first to find its exact board link (e.g. `jobs.ashbyhq.com/whop`); only if that fails are board names guessed |
-
-**Add your own** (UI, or `--feed` / `--track` on the CLI):
-- *Job feed URL*: any public RSS/Atom feed of jobs. Company is read from titles like "Role at Company" or
-  "Company: Role". Loopback / private-network URLs are rejected.
-- *Also check these companies*: names looked up on every selected career board even if they aren't in the
-  funding list (e.g. `--track Anthropic Ramp`).
-
-Each company card also has **Look manually** links (website, LinkedIn remote search, Google, Indeed) for
-companies where no job was found.
-
-Add a source: write a function in `hunt/sources.py` yielding `Funding` or `Job`, then register it in
-`FUNDING_SOURCES` / `JOB_SOURCES`.
+- **Easiest:** share this repo; each friend follows the Quick start and runs it on their own computer.
+  The repo must be public (or add them as collaborators on GitHub).
+- **Hosting on a server** is possible but not free on most platforms any more. Any host that runs a normal
+  Python process works: set `APP_PASSWORD` (required — the server refuses to start publicly without it),
+  `ALLOWED_HOSTS=your-app.example.com`, and run `python server.py --no-browser`; the platform's `PORT` is
+  picked up automatically. `render.yaml` is included for Render.
+- Not suitable: Vercel and Cloudflare Workers (short request limits; a run makes thousands of requests).
 
 ## Speed and freshness
 Career-board lookups (including "no board here" answers) are cached in `./.cache` for 6 hours, which roughly
-halves repeat runs. Use **Fresh data** under Advanced in the UI, or `--no-cache`, to bypass it. Delete `./.cache`
-to clear it.
+halves repeat runs. Use **Fresh data** under Advanced on the page, or `--no-cache`, to bypass it.
 
-## Tests
-```bash
-python -m unittest discover -s tests -v     # offline, no network
-```
-See [QA_REPORT.md](QA_REPORT.md) for the requirements traceability, defects fixed and residual risks.
-
-## What to expect (measured on a no-filter run, last 90 days, all rounds)
-About 94 funded companies; career boards found for ~3 in 4 of them; ~45 of those have remote-friendly jobs
-(~640 job links). The rest are mostly seed-stage companies with no public jobs page, or companies hiring
-in-office only. The "Where jobs were filtered out" line on the results page shows which filter removes what.
+## What to expect (no-filter run, last 90 days, all rounds)
+About 94 funded companies; a career board is found for ~3 in 4; ~47 have remote-friendly jobs (~640 job links).
+The rest are mostly seed-stage companies with no public jobs page, or companies hiring in-office only. The
+"Where jobs were filtered out" line on the results page shows which filter removes what.
 
 ## Notes and limits
-- Honours each site's `robots.txt` and waits `--delay` seconds between requests (Remotive was left out
-  because its robots.txt disallows its API; Crunchbase / LinkedIn need logins). RemoteOK and Jobicy ask for
+- Honours each site's `robots.txt` and waits at least 0.5 s between requests. RemoteOK and Jobicy ask for
   credit + a link back if you republish their data.
-- Experience, skills, remote and relocation are **keyword/regex guesses** from job text. Expect misses and
-  some false positives; "Senior"/"Staff" titles with no stated years are treated as 5+/8+.
-- Funded companies are matched to career boards by guessing the board name from the company name; ~2/3
-  are found. Matching to the generic job boards is by normalised company name.
-- prepdb's job cards use hashed CSS class names; if the site is redesigned, update the selectors in
-  `prepdb_jobs` / `prepdb_funding`.
+- Remote, experience, skills and relocation are **guessed from job text**; spot-check before applying.
+  "Senior"/"Staff" titles with no stated years count as 5+/8+.
+- If prepdb.fyi redesigns its pages, that source shows "failed" until the selectors in `hunt/sources.py` are updated.
+- Add a new source: write a function in `hunt/sources.py` that yields `Funding` or `Job`, then register it in
+  `FUNDING_SOURCES` / `JOB_SOURCES` and `SOURCE_INFO`.
+- Quality report: [QA_REPORT.md](QA_REPORT.md).
